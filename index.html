@@ -422,6 +422,12 @@ const printScript = '';
 table.items { width:100%; min-width:760px; border-collapse:collapse; font-size:13px; direction:rtl; margin-bottom:14px; table-layout:fixed; display:table !important; }
     .items-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
 
+    @media print {
+      .items-wrap { overflow:visible !important; }
+      table.items { min-width:0 !important; width:100% !important; font-size:10px !important; }
+      table.items thead th, table.items tbody td, table.items tfoot td { padding:4px 3px !important; }
+    }
+
 
     table.items thead tr { background:#2C5F3A; color:#fff; }
     table.items thead th { padding:6px 4px; text-align:right; font-weight:600; white-space:nowrap; font-size:11px; }
