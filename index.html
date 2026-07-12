@@ -264,16 +264,16 @@ table.q-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:720px;}
         <div class="info-box">
           <div class="info-row">
             <span class="info-lbl">موجه إلى:</span>
-            <input type="text" id="b-engineer" class="info-val" style="border:1px solid var(--border);border-radius:5px;padding:4px 8px;background:#fff;min-width:160px;" oninput="STATE.customer.engineer=this.value; STATE.customer.name=[STATE.customer.engineer,STATE.customer.address].filter(Boolean).join(' - ')"/>
+            <input type="text" id="b-engineer" class="info-val" style="border:1px solid var(--border);border-radius:5px;padding:4px 8px;background:#fff;min-width:160px;" oninput="STATE.customer.engineer=this.value; STATE.customer.name=[STATE.customer.engineer,STATE.customer.address].filter(Boolean).join(' - '); saveSession()"/>
           </div>
           <div class="info-row">
             <span class="info-lbl">العنوان / المشروع:</span>
-            <input type="text" id="b-address" class="info-val" style="border:1px solid var(--border);border-radius:5px;padding:4px 8px;background:#fff;min-width:160px;" oninput="STATE.customer.address=this.value; STATE.customer.name=[STATE.customer.engineer,STATE.customer.address].filter(Boolean).join(' - ')"/>
+            <input type="text" id="b-address" class="info-val" style="border:1px solid var(--border);border-radius:5px;padding:4px 8px;background:#fff;min-width:160px;" oninput="STATE.customer.address=this.value; STATE.customer.name=[STATE.customer.engineer,STATE.customer.address].filter(Boolean).join(' - '); saveSession()"/>
           </div>
         </div>
         <div class="dollar-inline">
           <span style="font-size:12px;color:var(--mid);font-weight:600;">سعر الدولار:</span>
-          <input type="number" id="b-dollar" value="52" min="1"/>
+          <input type="number" id="b-dollar" value="52" min="1" oninput="saveSession()"/>
           <span style="font-size:12px;color:var(--mid);">جنيه</span>
         </div>
       </div>
@@ -365,6 +365,44 @@ function closeConfirm(){ $('confirm-modal').classList.remove('open'); _confirmCb
 function closeMailModal(){ $('mail-modal').classList.remove('open'); }
 
 let STATE = { customer: null, rows: [] };
+
+/* ─── حفظ واسترجاع الحالة عشان الريلود ميرجعش للرئيسية ─── */
+function saveSession(){
+  try{
+    const activePage = document.querySelector('.page.active');
+    sessionStorage.setItem('lm_session', JSON.stringify({
+      page: activePage ? activePage.id : 'pg-home',
+      customer: STATE.customer,
+      rows: STATE.rows,
+      dollar: $('b-dollar') ? $('b-dollar').value : CFG.defaultDollar
+    }));
+  }catch(e){}
+}
+
+function restoreSession(){
+  try{
+    const raw = sessionStorage.getItem('lm_session');
+    if(!raw) return false;
+    const s = JSON.parse(raw);
+    if(!s || !s.customer || (s.page !== 'pg-editor' && s.page !== 'pg-preview')) return false;
+
+    STATE.customer = s.customer;
+    STATE.rows = (s.rows && s.rows.length) ? s.rows.map(r=>({...r,_id:Math.random()})) : [Q.newRow()];
+
+    $('b-engineer').value = STATE.customer.engineer || '';
+    $('b-address').value  = STATE.customer.address  || '';
+    $('b-dollar').value   = s.dollar || CFG.defaultDollar;
+    Q.render();
+
+    if(s.page === 'pg-preview'){
+      $('preview-inner').innerHTML = buildPdfHtml(false,false);
+      UI.show('pg-preview');
+    } else {
+      UI.show('pg-editor');
+    }
+    return true;
+  }catch(e){ return false; }
+}
 
 function dollar(){ return $('b-dollar')?.value || $('inp-dollar')?.value || CFG.defaultDollar; }
 
@@ -514,8 +552,8 @@ ${printScript}
 
 /* ─── UI navigation ─── */
 const UI = {
-  show(id){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); $(id).classList.add('active'); },
-  goHome(){   this.show('pg-home'); API.listCustomers(); },
+  show(id){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); $(id).classList.add('active'); saveSession(); },
+  goHome(){ try{ sessionStorage.removeItem('lm_session'); }catch(e){} this.show('pg-home'); API.listCustomers(); },
   goEditor(){ this.show('pg-editor'); },
 
   openMailPrompt(){
@@ -608,8 +646,8 @@ $('b-engineer').value = eng || '';
     $('b-dollar').value = dlr;
     Q.render();
     this.goEditor();
+    saveSession();
   },
-
   openCustomer(c){
     STATE.customer = c;
 $('b-engineer').value = c.engineer || '';
@@ -621,8 +659,9 @@ $('b-engineer').value = c.engineer || '';
         if(!STATE.rows.length) STATE.rows=[Q.newRow()];
         Q.render();
         this.goEditor();
+        saveSession();
       })
-      .catch(()=>{ STATE.rows=[Q.newRow()]; Q.render(); this.goEditor(); })
+      .catch(()=>{ STATE.rows=[Q.newRow()]; Q.render(); this.goEditor(); saveSession(); })
       .finally(loaded);
   }
 };
@@ -630,12 +669,12 @@ $('b-engineer').value = c.engineer || '';
 /* ─── rows / table ─── */
 const Q = {
   newRow(){ return {_id:Math.random(),category:'',unit:'',description:'',qty:1,price:0,notes:''}; },
-  addRow(){ STATE.rows.push(this.newRow()); this.render(); },
-  del(id)  { STATE.rows=STATE.rows.filter(r=>r._id!==id); this.render(); },
+addRow(){ STATE.rows.push(this.newRow()); this.render(); saveSession(); },
+  del(id)  { STATE.rows=STATE.rows.filter(r=>r._id!==id); this.render(); saveSession(); },
   tot(r)   { return num(r.qty)*num(r.price); },
   grand()  { return STATE.rows.reduce((s,r)=>s+this.tot(r),0); },
-  set(id,f,v){ const r=STATE.rows.find(r=>r._id===id); if(r) r[f]=v; this.refreshTotals(); },
-  setNum(id,f,v){ const r=STATE.rows.find(r=>r._id===id); if(r){ r[f]=num(v); this.refreshTotals(); } },
+set(id,f,v){ const r=STATE.rows.find(r=>r._id===id); if(r) r[f]=v; this.refreshTotals(); saveSession(); },
+  setNum(id,f,v){ const r=STATE.rows.find(r=>r._id===id); if(r){ r[f]=num(v); this.refreshTotals(); } saveSession(); },
 
   refreshTotals(){
     STATE.rows.forEach((r,i)=>{
@@ -794,7 +833,7 @@ const PDF = {
   }
 };
 /* ─── init ─── */
-window.onload = () => API.listCustomers();
+window.onload = () => { API.listCustomers(); restoreSession(); };
 </script>
 </body>
 </html>
