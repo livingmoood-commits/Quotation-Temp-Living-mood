@@ -264,11 +264,11 @@ table.q-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:720px;}
         <div class="info-box">
           <div class="info-row">
             <span class="info-lbl">موجه إلى:</span>
-            <span class="info-val" id="b-engineer"></span>
+            <input type="text" id="b-engineer" class="info-val" style="border:1px solid var(--border);border-radius:5px;padding:4px 8px;background:#fff;min-width:160px;" oninput="STATE.customer.engineer=this.value; STATE.customer.name=[STATE.customer.engineer,STATE.customer.address].filter(Boolean).join(' - ')"/>
           </div>
           <div class="info-row">
             <span class="info-lbl">العنوان / المشروع:</span>
-            <span class="info-val" id="b-address"></span>
+            <input type="text" id="b-address" class="info-val" style="border:1px solid var(--border);border-radius:5px;padding:4px 8px;background:#fff;min-width:160px;" oninput="STATE.customer.address=this.value; STATE.customer.name=[STATE.customer.engineer,STATE.customer.address].filter(Boolean).join(' - ')"/>
           </div>
         </div>
         <div class="dollar-inline">
@@ -603,8 +603,8 @@ $('preview-inner').innerHTML = buildPdfHtml(false, false);
     const name = [eng,adr].filter(Boolean).join(' - ');
     STATE.customer = { name, engineer:eng, address:adr };
     STATE.rows = [Q.newRow()];
-    $('b-engineer').textContent = eng || '—';
-    $('b-address').textContent  = adr || '—';
+$('b-engineer').value = eng || '';
+    $('b-address').value  = adr || '';
     $('b-dollar').value = dlr;
     Q.render();
     this.goEditor();
@@ -612,8 +612,8 @@ $('preview-inner').innerHTML = buildPdfHtml(false, false);
 
   openCustomer(c){
     STATE.customer = c;
-    $('b-engineer').textContent = c.engineer || '—';
-    $('b-address').textContent  = c.address  || '—';
+$('b-engineer').value = c.engineer || '';
+    $('b-address').value  = c.address  || '';
     loading('جاري تحميل الكوتيشن...');
     API.fetch('GET',{action:'getQuotation',name:c.name})
       .then(d=>{
