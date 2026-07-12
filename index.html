@@ -167,16 +167,7 @@ table.q-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:720px;}
 </head>
 <body>
 
-<datalist id="cat-list">
-  <option value="DOORS"/>
-  <option value="RECEPTION"/>
-  <option value="BEDROOM"/>
-  <option value="BEDROOM 2"/>
-  <option value="LIVING ROOM"/>
-  <option value="DRESSING"/>
-  <option value="OFFICE"/>
-  <option value="TOILET"/>
-</datalist>
+<datalist id="cat-list"></datalist>
 
 <div id="overlay">
   <div class="spinner"></div>
@@ -833,7 +824,12 @@ const PDF = {
   }
 };
 /* ─── init ─── */
-window.onload = () => { API.listCustomers(); restoreSession(); };
+function populateCategoryList(){
+  const dl = $('cat-list');
+  dl.innerHTML = CFG.categories.map(c => `<option value="${h(c)}"></option>`).join('');
+}
+
+window.onload = () => { populateCategoryList(); API.listCustomers(); restoreSession(); };
 </script>
 </body>
 </html>
