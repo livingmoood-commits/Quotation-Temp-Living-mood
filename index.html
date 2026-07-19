@@ -390,8 +390,9 @@ function openConfirm(msg, cb){
   _confirmCb = cb;
   $('confirm-modal').classList.add('open');
   $('confirm-yes').onclick = function(){
+    const cb = _confirmCb;
     closeConfirm();
-    if(_confirmCb) _confirmCb();
+    if(cb) cb();
   };
 }
 function closeConfirm(){ $('confirm-modal').classList.remove('open'); _confirmCb=null; }
