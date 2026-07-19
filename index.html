@@ -17,7 +17,7 @@
   const CFG = {
     appsScriptUrl : 'https://script.google.com/macros/s/AKfycbxCwXTNpOpFaFbcg-nO033_8ScTl1aEvJM-bbs43JDaq5hSrcpshRhnngToqK7g0BN3Jg/exec',
     defaultDollar : '52',
-    categories: ['Doors', 'Reception', 'Bedroom', 'Bedroom 2', 'Living Room', 'Dressing', 'Office','Pergola', 'Toilet', 'Kitchen', 'Veneers', 'TV Unit', 'Table'],
+    categories: ['Doors', 'Reception', 'Bedroom', 'Bedroom 2', 'Living Room', 'Dressing', 'Office', 'Toilet', 'Kitchen', 'Veneers', 'TV Unit', 'Table'],
     noteLines: [
       'الأسعار مرتبطة بسعر الدولار اليوم {DOLLAR} جنيه مصري وسعر البنزين وأي تغيير في تكلفة التشغيل يضاف في حينها.',
       'الأسعار وضحت بناءاً على الرسم الهندسي والـ 3D وأي تعديل في المقاسات أو التصميم يغير من الأسعار وقت التنفيذ.'
@@ -545,7 +545,7 @@ u + #body .notes-box, #MessageViewBody .notes-box { display:block !important; ma
   </div>
 
   ${discAmt > 0 ? `<div style="background:#2C5F3A;color:#fff;text-align:center;padding:8px 14px;border-radius:5px;font-size:13px;font-weight:700;letter-spacing:.5px;margin-bottom:14px;">
-    • خصم خاص ${fmt(STATE.discount?.percent||0)}% — وفّر ${fmt(discAmt)} جنيه
+    • خصم خاص ${fmt(STATE.discount?.percent||0)}% — ${fmt(discAmt)} جنيه
   </div>` : ''}
 
   <br/>
