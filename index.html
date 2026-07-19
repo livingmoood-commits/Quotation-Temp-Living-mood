@@ -852,7 +852,11 @@ const API = {
       const d=await this.fetch('GET',{action:'listCustomers'});
       if(!d.customers?.length){ list.innerHTML='<div style="color:var(--mid);text-align:center;padding:20px;font-size:13px;">لا يوجد كوتيشنات بعد</div>'; return; }
       list.innerHTML='';
-      d.customers.forEach(c=>{
+      const hasDate = d.customers.some(c=>c.date);
+      const sorted = hasDate
+        ? [...d.customers].sort((a,b)=> String(b.date||'').localeCompare(String(a.date||'')))
+        : [...d.customers].reverse();
+      sorted.forEach(c=>{
         const div=document.createElement('div'); div.className='c-item';
         div.innerHTML=`
           <div class="ci-info">
@@ -895,10 +899,13 @@ const API = {
   async save(){
     loading('جاري الحفظ...');
     try{
+      const dlr = dollar();
       const d=await this.fetch('POST',{
         action:'saveQuotation', customer:STATE.customer,
         rows:STATE.rows.map(r=>({...r,total:Q.tot(r)})),
-        subtotal:Q.grand(), discount:STATE.discount, grandTotal:Q.netTotal()
+        subtotal:Q.grand(), discount:STATE.discount, grandTotal:Q.netTotal(),
+        dollar: dlr,
+        noteLines: CFG.noteLines.map(l=>l.replace('{DOLLAR}', dlr))
       });
       d.success ? alert_('alert-save','ok','✔ تم الحفظ في Google Sheets بنجاح')
                 : alert_('alert-save','err','خطأ: '+(d.error||'غير معروف'));
