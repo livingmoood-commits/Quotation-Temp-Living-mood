@@ -17,7 +17,7 @@
   const CFG = {
     appsScriptUrl : 'https://script.google.com/macros/s/AKfycbxCwXTNpOpFaFbcg-nO033_8ScTl1aEvJM-bbs43JDaq5hSrcpshRhnngToqK7g0BN3Jg/exec',
     defaultDollar : '52',
-    categories: ['Doors', 'Reception', 'Bedroom', 'Bedroom 2', 'Living Room', 'Dressing', 'Office', 'Toilet', 'Kitchen', 'Veneers', 'TV Unit', 'Table'],
+    categories: ['Doors', 'Reception', 'Bedroom', 'Bedroom 2', 'Living Room', 'Dressing','Pergola', 'Office', 'Toilet', 'Kitchen', 'Veneers', 'TV Unit', 'Table'],
     noteLines: [
       'الأسعار مرتبطة بسعر الدولار اليوم {DOLLAR} جنيه مصري وسعر البنزين وأي تغيير في تكلفة التشغيل يضاف في حينها.',
       'الأسعار وضحت بناءاً على الرسم الهندسي والـ 3D وأي تعديل في المقاسات أو التصميم يغير من الأسعار وقت التنفيذ.'
@@ -748,15 +748,17 @@ addRow(){ STATE.rows.push(this.newRow()); this.render(); saveSession(); },
     if(!STATE.discount) STATE.discount = { percent:0, amount:0 };
 
     if(field === 'percent'){
-      // النسبة بتتحكم في القيمة فقط (اتجاه واحد) — من غير ما تغيّر النسبة نفسها
+      // كتبت في النسبة → تتحدث القيمة تلقائي
       let p = v; if(p < 0) p = 0; if(p > 100) p = 100;
       const amt = sub > 0 ? Math.ceil(sub * p / 100) : 0;
       STATE.discount.percent = p;
       STATE.discount.amount  = amt;
     } else {
-      // القيمة قابلة للتعديل بحرية، من غير ما تتأثر النسبة المكتوبة
+      // كتبت في القيمة → تتحدث النسبة تلقائي
       let a = v; if(a < 0) a = 0; if(a > sub) a = sub;
-      STATE.discount.amount = a;
+      const p = sub > 0 ? Math.ceil((a / sub) * 100) : 0;
+      STATE.discount.amount  = a;
+      STATE.discount.percent = p;
     }
     this.syncDiscountInputs();
     this.refreshTotals();
