@@ -469,12 +469,14 @@ const notes = CFG.noteLines.map(l=>`<div style="margin-bottom:6px;">• ${l.repl
   });
 
 const printScript = '';
+  const projectNameForTitle = (c.address || '').trim();
+  const pdfDocTitle = 'Quotation' + (projectNameForTitle ? ' - ' + projectNameForTitle : '');
 
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8"/>
-  <title>LivingMood_Quote</title>
+  <title>${h(pdfDocTitle)}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet"/>
@@ -920,8 +922,11 @@ const PDF = {
     const originalBody  = document.body.innerHTML;
     const originalTitle = document.title;
 
+    const projectName = (STATE.customer && STATE.customer.address) ? STATE.customer.address.trim() : '';
+    const pdfTitle = 'Quotation' + (projectName ? ' - ' + projectName : '');
+
     // نستبدل الصفحة مؤقتًا بمحتوى الكوتيشن بس (ده اللي هيطبعه المتصفح على الموبايل)
-    document.title = 'LivingMood_Quote';
+    document.title = pdfTitle;
     document.head.innerHTML = printStyles;
     document.body.innerHTML = printContent;
 
@@ -941,7 +946,7 @@ const PDF = {
 
     // fallback لو onafterprint مش مدعوم على المتصفح: نرجع الصفحة تلقائيًا بعد فترة
     setTimeout(() => {
-      if(document.title === 'LivingMood_Quote') restore();
+      if(document.title === pdfTitle) restore();
     }, 3000);
   }
 };
