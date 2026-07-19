@@ -17,7 +17,7 @@
   const CFG = {
     appsScriptUrl : 'https://script.google.com/macros/s/AKfycbxCwXTNpOpFaFbcg-nO033_8ScTl1aEvJM-bbs43JDaq5hSrcpshRhnngToqK7g0BN3Jg/exec',
     defaultDollar : '52',
-    categories: ['Doors', 'Reception', 'Bedroom', 'Bedroom 2', 'Living Room', 'Dressing', 'Office', 'Toilet', 'Kitchen', 'Veneers','Pergola', 'TV Unit', 'Table'],
+    categories: ['Doors', 'Reception', 'Bedroom', 'Bedroom 2', 'Living Room', 'Dressing', 'Office','Pergola', 'Toilet', 'Kitchen', 'Veneers', 'TV Unit', 'Table'],
     noteLines: [
       'الأسعار مرتبطة بسعر الدولار اليوم {DOLLAR} جنيه مصري وسعر البنزين وأي تغيير في تكلفة التشغيل يضاف في حينها.',
       'الأسعار وضحت بناءاً على الرسم الهندسي والـ 3D وأي تعديل في المقاسات أو التصميم يغير من الأسعار وقت التنفيذ.'
@@ -107,19 +107,19 @@ table.q-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:720px;}
 
 .discount-card{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:16px;}
 .discount-card .dc-title{font-size:12px;font-weight:700;color:var(--mid);letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
-.dc-fields{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;}
+.dc-fields{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-end;}
 .dc-field{display:flex;flex-direction:column;gap:5px;}
 .dc-field label{font-size:10px;font-weight:700;color:var(--mid);letter-spacing:.5px;}
-.dc-input-wrap{position:relative;display:flex;align-items:center;}
-.dc-input-wrap input{width:130px;padding:8px 34px 8px 10px;border:1.5px solid var(--border);border-radius:6px;background:#fff;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;color:var(--dark);direction:ltr;text-align:left;outline:none;}
+.dc-input-wrap{display:flex;align-items:center;gap:8px;}
+.dc-input-wrap input{width:110px;padding:8px 10px;border:1.5px solid var(--border);border-radius:6px;background:#fff;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;color:var(--dark);direction:ltr;text-align:left;outline:none;}
 .dc-input-wrap input:focus{border-color:var(--gold);}
-.dc-input-wrap span{position:absolute;left:10px;font-size:12px;color:var(--mid);font-weight:700;pointer-events:none;}
+.dc-suffix{font-size:12px;color:var(--mid);font-weight:700;white-space:nowrap;font-family:'Cairo',sans-serif;}
 .dc-summary{margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);display:none;}
 .dc-summary.show{display:block;}
 .dc-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:3px 0;color:var(--mid);}
 .dc-row.total{font-weight:700;color:var(--green);}
 .dc-row .val{font-weight:700;color:var(--dark);direction:ltr;}
-@media(max-width:640px){.dc-fields{gap:10px;}.dc-input-wrap input{width:100%;}.dc-field{flex:1;min-width:120px;}}
+@media(max-width:640px){.dc-fields{gap:16px;}.dc-input-wrap input{width:100px;}}
 
 .action-bar{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;}
 
@@ -309,20 +309,20 @@ table.q-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:720px;}
       <button class="btn btn-outline btn-sm" onclick="Q.addRow()" style="margin-bottom:18px;">+ إضافة سطر</button>
 
       <div class="discount-card">
-        <div class="dc-title">✦ خصم على العرض (اختياري)</div>
+        <div class="dc-title">• خصم على العرض (اختياري)</div>
         <div class="dc-fields">
           <div class="dc-field">
             <label>نسبة الخصم</label>
             <div class="dc-input-wrap">
               <input type="text" id="disc-percent" inputmode="decimal" placeholder="0" value="0" oninput="Q.setDiscount('percent',this.value)"/>
-              <span>%</span>
+              <span class="dc-suffix">%</span>
             </div>
           </div>
           <div class="dc-field">
             <label>قيمة الخصم</label>
             <div class="dc-input-wrap">
               <input type="text" id="disc-amount" inputmode="decimal" placeholder="0" value="0" oninput="Q.setDiscount('amount',this.value)"/>
-              <span>جنيه</span>
+              <span class="dc-suffix">جنيه</span>
             </div>
           </div>
         </div>
@@ -545,7 +545,7 @@ u + #body .notes-box, #MessageViewBody .notes-box { display:block !important; ma
   </div>
 
   ${discAmt > 0 ? `<div style="background:#2C5F3A;color:#fff;text-align:center;padding:8px 14px;border-radius:5px;font-size:13px;font-weight:700;letter-spacing:.5px;margin-bottom:14px;">
-    ✦ خصم خاص ${fmt(STATE.discount?.percent||0)}% — وفّر ${fmt(discAmt)} جنيه
+    • خصم خاص ${fmt(STATE.discount?.percent||0)}% — وفّر ${fmt(discAmt)} جنيه
   </div>` : ''}
 
   <br/>
@@ -748,15 +748,15 @@ addRow(){ STATE.rows.push(this.newRow()); this.render(); saveSession(); },
     if(!STATE.discount) STATE.discount = { percent:0, amount:0 };
 
     if(field === 'percent'){
+      // النسبة بتتحكم في القيمة فقط (اتجاه واحد) — من غير ما تغيّر النسبة نفسها
       let p = v; if(p < 0) p = 0; if(p > 100) p = 100;
       const amt = sub > 0 ? Math.ceil(sub * p / 100) : 0;
       STATE.discount.percent = p;
       STATE.discount.amount  = amt;
     } else {
+      // القيمة قابلة للتعديل بحرية، من غير ما تتأثر النسبة المكتوبة
       let a = v; if(a < 0) a = 0; if(a > sub) a = sub;
-      const p = sub > 0 ? Math.ceil((a / sub) * 100) : 0;
-      STATE.discount.amount  = a;
-      STATE.discount.percent = p;
+      STATE.discount.amount = a;
     }
     this.syncDiscountInputs();
     this.refreshTotals();
