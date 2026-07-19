@@ -853,8 +853,17 @@ const API = {
       if(!d.customers?.length){ list.innerHTML='<div style="color:var(--mid);text-align:center;padding:20px;font-size:13px;">لا يوجد كوتيشنات بعد</div>'; return; }
       list.innerHTML='';
       const hasDate = d.customers.some(c=>c.date);
+      // بنحول التاريخ لقيمة زمنية حقيقية للمقارنة، مش نص، عشان الترتيب
+      // يفضل صح لأي صيغة عرض للتاريخ (زي 18-7-2026 أو 2026-07-19)
+      const parseDate = (s) => {
+        s = String(s||'').trim();
+        const m = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/); // d-M-yyyy
+        if (m) return new Date(+m[3], +m[2]-1, +m[1]).getTime();
+        const t = new Date(s).getTime();
+        return isNaN(t) ? 0 : t;
+      };
       const sorted = hasDate
-        ? [...d.customers].sort((a,b)=> String(b.date||'').localeCompare(String(a.date||'')))
+        ? [...d.customers].sort((a,b)=> parseDate(b.date) - parseDate(a.date))
         : [...d.customers].reverse();
       sorted.forEach(c=>{
         const div=document.createElement('div'); div.className='c-item';
