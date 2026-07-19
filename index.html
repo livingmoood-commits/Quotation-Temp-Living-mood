@@ -17,7 +17,7 @@
   const CFG = {
     appsScriptUrl : 'https://script.google.com/macros/s/AKfycbxCwXTNpOpFaFbcg-nO033_8ScTl1aEvJM-bbs43JDaq5hSrcpshRhnngToqK7g0BN3Jg/exec',
     defaultDollar : '52',
-    categories: ['Doors', 'Reception', 'Bedroom', 'Bedroom 2', 'Living Room', 'Dressing', 'Office', 'Toilet', 'Kitchen', 'Veneers', 'TV Unit', 'Table'],
+    categories: ['Doors', 'Reception', 'Bedroom', 'Bedroom 2', 'Living Room', 'Dressing', 'Office', 'Toilet', 'Kitchen', 'Veneers','Pergola', 'TV Unit', 'Table'],
     noteLines: [
       'الأسعار مرتبطة بسعر الدولار اليوم {DOLLAR} جنيه مصري وسعر البنزين وأي تغيير في تكلفة التشغيل يضاف في حينها.',
       'الأسعار وضحت بناءاً على الرسم الهندسي والـ 3D وأي تعديل في المقاسات أو التصميم يغير من الأسعار وقت التنفيذ.'
@@ -104,6 +104,22 @@ table.q-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:720px;}
 
 .grand-bar{background:var(--dark);color:var(--gold-l);padding:13px 20px;border-radius:6px;display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:700;margin-bottom:16px;}
 .grand-bar .amt{font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);}
+
+.discount-card{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin-bottom:16px;}
+.discount-card .dc-title{font-size:12px;font-weight:700;color:var(--mid);letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.dc-fields{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;}
+.dc-field{display:flex;flex-direction:column;gap:5px;}
+.dc-field label{font-size:10px;font-weight:700;color:var(--mid);letter-spacing:.5px;}
+.dc-input-wrap{position:relative;display:flex;align-items:center;}
+.dc-input-wrap input{width:130px;padding:8px 34px 8px 10px;border:1.5px solid var(--border);border-radius:6px;background:#fff;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;color:var(--dark);direction:ltr;text-align:left;outline:none;}
+.dc-input-wrap input:focus{border-color:var(--gold);}
+.dc-input-wrap span{position:absolute;left:10px;font-size:12px;color:var(--mid);font-weight:700;pointer-events:none;}
+.dc-summary{margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);display:none;}
+.dc-summary.show{display:block;}
+.dc-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:3px 0;color:var(--mid);}
+.dc-row.total{font-weight:700;color:var(--green);}
+.dc-row .val{font-weight:700;color:var(--dark);direction:ltr;}
+@media(max-width:640px){.dc-fields{gap:10px;}.dc-input-wrap input{width:100%;}.dc-field{flex:1;min-width:120px;}}
 
 .action-bar{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;}
 
@@ -291,6 +307,32 @@ table.q-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:720px;}
         </table>
       </div>
       <button class="btn btn-outline btn-sm" onclick="Q.addRow()" style="margin-bottom:18px;">+ إضافة سطر</button>
+
+      <div class="discount-card">
+        <div class="dc-title">✦ خصم على العرض (اختياري)</div>
+        <div class="dc-fields">
+          <div class="dc-field">
+            <label>نسبة الخصم</label>
+            <div class="dc-input-wrap">
+              <input type="text" id="disc-percent" inputmode="decimal" placeholder="0" value="0" oninput="Q.setDiscount('percent',this.value)"/>
+              <span>%</span>
+            </div>
+          </div>
+          <div class="dc-field">
+            <label>قيمة الخصم</label>
+            <div class="dc-input-wrap">
+              <input type="text" id="disc-amount" inputmode="decimal" placeholder="0" value="0" oninput="Q.setDiscount('amount',this.value)"/>
+              <span>جنيه</span>
+            </div>
+          </div>
+        </div>
+        <div class="dc-summary" id="dc-summary">
+          <div class="dc-row"><span>الإجمالي قبل الخصم</span><span class="val" id="dc-subtotal">0</span></div>
+          <div class="dc-row"><span id="dc-percent-lbl">الخصم</span><span class="val" id="dc-discount-val">0</span></div>
+          <div class="dc-row total"><span>الإجمالي بعد الخصم</span><span class="val" id="dc-net">0</span></div>
+        </div>
+      </div>
+
       <div class="grand-bar">
         <span>الإجمالي الكلي</span>
         <span class="amt" id="grand-total">0 جنيه</span>
@@ -355,7 +397,7 @@ function openConfirm(msg, cb){
 function closeConfirm(){ $('confirm-modal').classList.remove('open'); _confirmCb=null; }
 function closeMailModal(){ $('mail-modal').classList.remove('open'); }
 
-let STATE = { customer: null, rows: [] };
+let STATE = { customer: null, rows: [], discount: { percent: 0, amount: 0 } };
 
 /* ─── حفظ واسترجاع الحالة عشان الريلود ميرجعش للرئيسية ─── */
 function saveSession(){
@@ -365,6 +407,7 @@ function saveSession(){
       page: activePage ? activePage.id : 'pg-home',
       customer: STATE.customer,
       rows: STATE.rows,
+      discount: STATE.discount,
       dollar: $('b-dollar') ? $('b-dollar').value : CFG.defaultDollar
     }));
   }catch(e){}
@@ -379,11 +422,13 @@ function restoreSession(){
 
     STATE.customer = s.customer;
     STATE.rows = (s.rows && s.rows.length) ? s.rows.map(r=>({...r,_id:Math.random()})) : [Q.newRow()];
+    STATE.discount = s.discount || { percent: 0, amount: 0 };
 
     $('b-engineer').value = STATE.customer.engineer || '';
     $('b-address').value  = STATE.customer.address  || '';
     $('b-dollar').value   = s.dollar || CFG.defaultDollar;
     Q.render();
+    Q.syncDiscountInputs();
 
     if(s.page === 'pg-preview'){
       $('preview-inner').innerHTML = buildPdfHtml(false,false);
@@ -402,6 +447,7 @@ function buildPdfHtml(forPrint, forEmail=false){
   const c   = STATE.customer || {};
   const dlr = dollar();
   const date= new Date().toLocaleDateString('en-GB');
+  const discAmt = Q.discountAmt();
 const notes = CFG.noteLines.map(l=>`<div style="margin-bottom:6px;">• ${l.replace('{DOLLAR}',dlr)}</div>`).join('');
   let tbody='';
   STATE.rows.forEach((r,i)=>{
@@ -498,6 +544,10 @@ u + #body .notes-box, #MessageViewBody .notes-box { display:block !important; ma
     ${c.address  ? `<div class="client-row"><span class="client-lbl">العنوان / المشروع:</span><span class="client-val">${h(c.address)}</span></div>` : ''}
   </div>
 
+  ${discAmt > 0 ? `<div style="background:#2C5F3A;color:#fff;text-align:center;padding:8px 14px;border-radius:5px;font-size:13px;font-weight:700;letter-spacing:.5px;margin-bottom:14px;">
+    ✦ خصم خاص ${fmt(STATE.discount?.percent||0)}% — وفّر ${fmt(discAmt)} جنيه
+  </div>` : ''}
+
   <br/>
   <div class="items-wrap"><table class="items">
     <thead>
@@ -514,9 +564,20 @@ u + #body .notes-box, #MessageViewBody .notes-box { display:block !important; ma
     </thead>
     <tbody>${tbody}</tbody>
     <tfoot>
+      ${discAmt > 0 ? `
       <tr>
-        <td colspan="6" style="text-align:right;">الإجمالي الكلي</td>
+        <td colspan="6" style="text-align:right;">الإجمالي قبل الخصم</td>
         <td class="ltr">${fmt(Q.grand())}</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="6" style="text-align:right;">الخصم (${fmt(STATE.discount?.percent||0)}%)</td>
+        <td class="ltr">- ${fmt(discAmt)}</td>
+        <td></td>
+      </tr>` : ''}
+      <tr>
+        <td colspan="6" style="text-align:right;">الإجمالي الكلي${discAmt>0?' بعد الخصم':''}</td>
+        <td class="ltr">${fmt(Q.netTotal())}</td>
         <td></td>
       </tr>
     </tfoot>
@@ -601,7 +662,9 @@ const UI = {
         subject:'Quotation Project - Living Mood',
         rows: STATE.rows.map(r=>({...r, total: Q.tot(r)})),
         customer: STATE.customer,
-        grandTotal: Q.grand(),
+        subtotal: Q.grand(),
+        discount: STATE.discount,
+        grandTotal: Q.netTotal(),
         dollar: dollar()
       });
       if(d.success){
@@ -632,10 +695,12 @@ $('preview-inner').innerHTML = buildPdfHtml(false, false);
     const name = [eng,adr].filter(Boolean).join(' - ');
     STATE.customer = { name, engineer:eng, address:adr };
     STATE.rows = [Q.newRow()];
+    STATE.discount = { percent: 0, amount: 0 };
 $('b-engineer').value = eng || '';
     $('b-address').value  = adr || '';
     $('b-dollar').value = dlr;
     Q.render();
+    Q.syncDiscountInputs();
     this.goEditor();
     saveSession();
   },
@@ -648,11 +713,13 @@ $('b-engineer').value = c.engineer || '';
       .then(d=>{
         STATE.rows = (d.rows||[]).map(r=>({...r,_id:Math.random()}));
         if(!STATE.rows.length) STATE.rows=[Q.newRow()];
+        STATE.discount = d.discount || { percent: 0, amount: 0 };
         Q.render();
+        Q.syncDiscountInputs();
         this.goEditor();
         saveSession();
       })
-      .catch(()=>{ STATE.rows=[Q.newRow()]; Q.render(); this.goEditor(); saveSession(); })
+      .catch(()=>{ STATE.rows=[Q.newRow()]; STATE.discount={percent:0,amount:0}; Q.render(); Q.syncDiscountInputs(); this.goEditor(); saveSession(); })
       .finally(loaded);
   }
 };
@@ -664,6 +731,56 @@ addRow(){ STATE.rows.push(this.newRow()); this.render(); saveSession(); },
   del(id)  { STATE.rows=STATE.rows.filter(r=>r._id!==id); this.render(); saveSession(); },
   tot(r)   { return num(r.qty)*num(r.price); },
   grand()  { return STATE.rows.reduce((s,r)=>s+this.tot(r),0); },
+
+  /* ─── خصم ─── */
+  discountAmt(){
+    const sub = this.grand();
+    let amt = num(STATE.discount?.amount);
+    if(amt < 0) amt = 0;
+    if(amt > sub) amt = sub;
+    return amt;
+  },
+  netTotal(){ return Math.max(0, this.grand() - this.discountAmt()); },
+
+  setDiscount(field, value){
+    const sub = this.grand();
+    const v = parseFloat((value+'').replace(/,/g,'')) || 0;
+    if(!STATE.discount) STATE.discount = { percent:0, amount:0 };
+
+    if(field === 'percent'){
+      let p = v; if(p < 0) p = 0; if(p > 100) p = 100;
+      const amt = sub > 0 ? Math.ceil(sub * p / 100) : 0;
+      STATE.discount.percent = p;
+      STATE.discount.amount  = amt;
+    } else {
+      let a = v; if(a < 0) a = 0; if(a > sub) a = sub;
+      const p = sub > 0 ? Math.ceil((a / sub) * 100) : 0;
+      STATE.discount.amount  = a;
+      STATE.discount.percent = p;
+    }
+    this.syncDiscountInputs();
+    this.refreshTotals();
+    saveSession();
+  },
+
+  syncDiscountInputs(){
+    if(!STATE.discount) STATE.discount = { percent:0, amount:0 };
+    if(document.activeElement !== $('disc-percent')) $('disc-percent').value = STATE.discount.percent || 0;
+    if(document.activeElement !== $('disc-amount'))  $('disc-amount').value  = STATE.discount.amount  || 0;
+    this.updateDiscountSummary();
+  },
+
+  updateDiscountSummary(){
+    const sub = this.grand();
+    const dAmt = this.discountAmt();
+    const p = STATE.discount?.percent || 0;
+    $('dc-summary').classList.toggle('show', dAmt > 0);
+    $('dc-subtotal').textContent = fmt(sub) + ' جنيه';
+    $('dc-percent-lbl').textContent = 'الخصم (' + fmt(p) + '%)';
+    $('dc-discount-val').textContent = '- ' + fmt(dAmt) + ' جنيه';
+    $('dc-net').textContent = fmt(this.netTotal()) + ' جنيه';
+  },
+
 set(id,f,v){ const r=STATE.rows.find(r=>r._id===id); if(r) r[f]=v; this.refreshTotals(); saveSession(); },
   setNum(id,f,v){ const r=STATE.rows.find(r=>r._id===id); if(r){ r[f]=num(v); this.refreshTotals(); } saveSession(); },
 
@@ -672,7 +789,8 @@ set(id,f,v){ const r=STATE.rows.find(r=>r._id===id); if(r) r[f]=v; this.refreshT
       const cells=document.querySelectorAll('#q-body tr')[i]?.querySelectorAll('td');
       if(cells) cells[6].textContent=fmt(this.tot(r));
     });
-    $('grand-total').textContent=fmt(this.grand())+' جنيه';
+    this.updateDiscountSummary();
+    $('grand-total').textContent=fmt(this.netTotal())+' جنيه';
   },
 
   render(){
@@ -698,7 +816,8 @@ set(id,f,v){ const r=STATE.rows.find(r=>r._id===id); if(r) r[f]=v; this.refreshT
         <td><button class="btn btn-danger btn-sm" onclick="Q.del(${r._id})">✕</button></td>`;
       tb.appendChild(tr);
     });
-    $('grand-total').textContent=fmt(this.grand())+' جنيه';
+    this.updateDiscountSummary();
+    $('grand-total').textContent=fmt(this.netTotal())+' جنيه';
   }
 };
 
@@ -773,7 +892,8 @@ const API = {
     try{
       const d=await this.fetch('POST',{
         action:'saveQuotation', customer:STATE.customer,
-        rows:STATE.rows.map(r=>({...r,total:Q.tot(r)})), grandTotal:Q.grand()
+        rows:STATE.rows.map(r=>({...r,total:Q.tot(r)})),
+        subtotal:Q.grand(), discount:STATE.discount, grandTotal:Q.netTotal()
       });
       d.success ? alert_('alert-save','ok','✔ تم الحفظ في Google Sheets بنجاح')
                 : alert_('alert-save','err','خطأ: '+(d.error||'غير معروف'));
